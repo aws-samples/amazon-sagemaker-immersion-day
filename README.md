@@ -1,4 +1,4 @@
-![Sagemaker](./images/SageMaker_logo.png "Sagemaker")
+![Sagemaker](./images/amazon-sagemaker-ml-services.png "Sagemaker")
 
 ## Welcome to Sagemaker Immersion Labs
 
