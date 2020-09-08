@@ -6,6 +6,8 @@ Amazon SageMaker Immersion Day help customers and partners to provide end to end
 
 ## Overview of the Labs
 
+Find details on each lab here - https://sagemaker-immersionday.workshop.aws/ 
+
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
