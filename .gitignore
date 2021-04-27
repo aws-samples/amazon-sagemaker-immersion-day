@@ -1,3 +1,5 @@
-container/
+
 data/
-.ipynb_checkpoints/
+container/
+*.npy
+.ipynb_checkpoints
