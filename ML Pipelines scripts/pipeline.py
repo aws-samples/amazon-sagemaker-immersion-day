@@ -83,6 +83,7 @@ def get_session(region, default_bucket):
 
 def get_pipeline(
     region,
+    sagemaker_project_arn=None,
     role=None,
     default_bucket=None,
     model_package_group_name="CustomerChurnPackageGroup",  # Choose any name
