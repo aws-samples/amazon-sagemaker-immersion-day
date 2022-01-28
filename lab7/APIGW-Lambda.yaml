@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: My API Gateway and Lambda function to Invoke Sagemaker Endpoint
+
+Parameters:
+  apiGatewayName:
+    Type: String
+    Default: my-api-SM
+  apiGatewayStageName:
+    Type: String
+    AllowedPattern: "[a-z0-9]+"
+    Default: prod
+  apiGatewayHTTPMethod:
+    Type: String
+    Default: POST
+  lambdaFunctionName:
+    Type: String
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
+    Default: my-function-SMInvokeEndpoint
+  sagemakerEndpoint:
+    Type: String
+    Default: linear-learner
+
+Resources:
+  apiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: API Gateway to call Lambda
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: !Ref apiGatewayName
+
+  apiGatewayResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt 
+        - apiGateway
+        - RootResourceId
+      PathPart: preditfare
+
+  apiGatewayRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: !Ref apiGatewayHTTPMethod
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt lambdaFunction.Arn
+        IntegrationResponses:
+          - StatusCode: '200'
+      ResourceId: !Ref apiGatewayResource
+      RestApiId: !Ref apiGateway
+      MethodResponses:
+          - StatusCode: '200'
+
+  apiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - apiGatewayRootMethod
+    Properties:
+      RestApiId: !Ref apiGateway
+      StageName: !Ref apiGatewayStageName
+
+  lambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import os
+          import io
+          import boto3
+          import json
+          import csv
+
+          # grab environment variables
+          ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
+          runtime= boto3.client('runtime.sagemaker')
+
+          def lambda_handler(event, context):
+              # TODO implement
+              try:
+                  data = json.loads(json.dumps(event))
+                  payload = data['data']
+                  response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
+                                                    ContentType='text/csv',
+                                                    Body=payload)
+                  result = json.loads(response['Body'].read().decode())
+                  prediction = result['predictions'][0]['score']
+              
+              except Exception as e:
+                  # Send some context about this error to Lambda Logs
+                  print(e)
+                  raise e
+              
+              return {
+                  'statusCode': 200,
+                  'body': 'For input data ' + payload + ' the predicted fare is :' + str(prediction)
+              }
+      Description: Lambda function to Invoke Sagemaker Endpoint
+      FunctionName: !Ref lambdaFunctionName
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt lambdaIAMRole.Arn
+      Runtime: python3.7
+      Environment:
+        Variables:
+          ENDPOINT_NAME: !Ref sagemakerEndpoint
+
+  lambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt lambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      # note: if route *not* at API Gateway root, `SourceArn` would take the form of:
+      #               arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/preditfare
+
+  lambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambdaFunctionName}:*
+          PolicyName: lambda
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - sagemaker:InvokeEndpoint
+                Effect: Allow
+                Resource: '*'
+          PolicyName: SagemakerInvokePolicy
+
+  lambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${lambdaFunctionName}
+      RetentionInDays: 90
+
+Outputs:
+  apiGatewayInvokeURL:
+    Value: !Sub https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${apiGatewayStageName}
+
+  lambdaArn:
+    Value: !GetAtt lambdaFunction.Arn
