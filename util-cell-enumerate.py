@@ -56,7 +56,7 @@ def renumber_code_cell(code_cell):
 
   # add a new  number
   insert_at_line_number=0 # in general, add to the beginning of the block
-  if len(code_cell["source"])>0 and not code_cell["source"][0].strip().startswith('%%'): 
+  if len(code_cell["source"])==0 or not code_cell["source"][0].strip().startswith('%%'): 
     # this is the usual case where line numbers can be prepended to the block
     code_cell["source"].insert(insert_at_line_number,'# cell {:02d}\n'.format(cell_number))
     code_cell["source"].insert(insert_at_line_number+1,'\n')
