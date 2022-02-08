@@ -36,7 +36,7 @@ def arg_check(path):
     sys.exit()
 
   if not path.endswith('.ipynb'):
-    print('The notebook does not have the expected .inbpy suffix')
+    print('The notebook does not have the expected .ipynb suffix')
     sys.exit()
 
   if not os.path.isfile(path):
@@ -50,12 +50,16 @@ def renumber_code_cell(code_cell):
   # strip any old numbers
   code_cell["source"] = [ line_of_code for line_of_code in code_cell["source"] if not has_cell_number.match(line_of_code)]
 
+  # strip any leading blank lines
+  while len(code_cell["source"]) > 0 and len(code_cell["source"][0].strip()) == 0:
+    code_cell["source"].pop(0)
+
   # add a new  number
   insert_at_line_number=0 # in general, add to the beginning of the block
-  if len(code_cell["source"])>0 and code_cell["source"][0].startswith('%%sh'): 
-    # this is rare case where line number cannot be prepended to the block
-    insert_at_line_number=1
-  code_cell["source"].insert(insert_at_line_number,'# cell {:02d}\n'.format(cell_number))
+  if len(code_cell["source"])>0 and not code_cell["source"][0].strip().startswith('%%'): 
+    # this is the usual case where line numbers can be prepended to the block
+    code_cell["source"].insert(insert_at_line_number,'# cell {:02d}\n'.format(cell_number))
+    code_cell["source"].insert(insert_at_line_number+1,'\n')
   cell_number += 1
   return code_cell
 
