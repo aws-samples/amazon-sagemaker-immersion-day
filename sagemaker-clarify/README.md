@@ -20,5 +20,5 @@ Amazon SageMaker Clarify works across the entire ML workflow to implement bias d
 
 In this tutorial, you will learn highlighted section:
 
-![](/image_clarify_1.png)
+![](/image_clarify_2.png)
 
