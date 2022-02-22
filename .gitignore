@@ -3,3 +3,4 @@ data/
 container/
 *.npy
 .ipynb_checkpoints
+.DS_Store
