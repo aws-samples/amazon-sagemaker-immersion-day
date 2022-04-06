@@ -9,7 +9,7 @@ Amazon SageMaker Clarify detects potential bias during data preparation, after m
 
 SageMaker Clarify also includes **feature importance** graphs that help you explain model predictions and produces reports which can be used to support internal presentations or to identify issues with your model that you can take steps to correct.
 
-![](./sagemaker-clarify/image_clarify_1.png)
+![](/image_clarify_1.png)
 Amazon SageMaker Clarify works across the entire ML workflow to implement bias detection and explainability. 
 
  - It can look for bias in your initial dataset as part of SageMaker Data Wrangler
