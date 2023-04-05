@@ -89,6 +89,7 @@ def get_pipeline(
     model_package_group_name="CustomerChurnPackageGroup",  # Choose any name
     pipeline_name="CustomerChurnDemo-p-ewf8t7lvhivm",  # You can find your pipeline name in the Studio UI (project -> Pipelines -> name)
     base_job_prefix="CustomerChurn",  # Choose any name
+    sagemaker_project_name=None
 ):
     """Gets a SageMaker ML Pipeline instance working with on CustomerChurn data.
     Args:
