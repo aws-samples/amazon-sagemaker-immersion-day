@@ -59,6 +59,19 @@ from sagemaker.workflow.step_collections import RegisterModel
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
+def get_sagemaker_client(region):
+     """Gets the sagemaker client.
+
+        Args:
+            region: the aws region to start the session
+            default_bucket: the bucket to use for storing the artifacts
+
+        Returns:
+            `sagemaker.session.Session instance
+        """
+     boto_session = boto3.Session(region_name=region)
+     sagemaker_client = boto_session.client("sagemaker")
+     return sagemaker_client
 
 def get_session(region, default_bucket):
     """Gets the sagemaker session based on the region.
@@ -79,6 +92,20 @@ def get_session(region, default_bucket):
         sagemaker_runtime_client=runtime_client,
         default_bucket=default_bucket,
     )
+
+def get_pipeline_custom_tags(new_tags, region, sagemaker_project_name=None):
+     try:
+         sm_client = get_sagemaker_client(region)
+         response = sm_client.describe_project(ProjectName=sagemaker_project_name)
+         sagemaker_project_arn = response["ProjectArn"]
+         response = sm_client.list_tags(
+             ResourceArn=sagemaker_project_arn)
+         project_tags = response["Tags"]
+         for project_tag in project_tags:
+             new_tags.append(project_tag)
+     except Exception as e:
+         print(f"Error getting project tags: {e}")
+     return new_tags
 
 
 def get_pipeline(
