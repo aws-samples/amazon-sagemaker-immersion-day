@@ -9,12 +9,12 @@
                 "codebuild:BatchGetBuilds",
                 "codebuild:StartBuild"
             ],
-            "Resource": "arn:aws:codebuild:*:*:project/sagemaker-studio*"
+            "Resource": "arn:aws:codebuild:*:*:project/sagemaker*"
         },
         {
             "Effect": "Allow",
             "Action": "logs:CreateLogStream",
-            "Resource": "arn:aws:logs:*:*:log-group:/aws/codebuild/sagemaker-studio*"
+            "Resource": "arn:aws:logs:*:*:log-group:/aws/codebuild/sagemaker*"
         },
         {
             "Effect": "Allow",
@@ -22,7 +22,7 @@
                 "logs:GetLogEvents",
                 "logs:PutLogEvents"
             ],
-            "Resource": "arn:aws:logs:*:*:log-group:/aws/codebuild/sagemaker-studio*:log-stream:*"
+            "Resource": "arn:aws:logs:*:*:log-group:/aws/codebuild/sagemaker*:log-stream:*"
         },
         {
             "Effect": "Allow",
@@ -43,7 +43,7 @@
                 "ecr:BatchCheckLayerAvailability",
                 "ecr:PutImage"
             ],
-            "Resource": "arn:aws:ecr:*:*:repository/sagemaker-studio*"
+            "Resource": "arn:aws:ecr:*:*:repository/sagemaker*"
         },
         {
             "Effect": "Allow",
