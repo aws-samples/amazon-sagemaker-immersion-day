@@ -1,0 +1,88 @@
+pipeline:
+    name: "llm-evaluation-multi-models-hybrid"
+
+dataset:
+    dataset_name: "trivia_qa_sampled"
+    input_data_location: "evaluation_dataset_trivia.jsonl"
+    dataset_mime_type: "jsonlines"
+    model_input_key: "question"
+    target_output_key: "answer"
+
+models:
+  - name: "llama2-7b-f"
+    model_id: "meta-textgeneration-llama-2-7b-f"
+    model_version: "3.0.0"
+    endpoint_name: "llm-eval-meta-textgeneration-llama-2-7b-f"
+    deployment_config:
+      instance_type: "ml.g5.2xlarge"
+      num_instances: 1
+    evaluation_config:
+      output: '[0].generation.content'
+      content_template: [[{"role":"user", "content": "PROMPT_PLACEHOLDER"}]]
+      inference_parameters: 
+        max_new_tokens: 100
+        top_p: 0.9
+        temperature: 0.6
+      custom_attributes:
+        accept_eula: True
+      prompt_template: "$feature"
+    cleanup_endpoint: True
+
+  - name: "falcon-7b"
+    model_id: "huggingface-llm-falcon-7b-bf16"
+    model_version: "*"
+    endpoint_name: "llm-eval-huggingface-llm-falcon-7b-bf16"
+    deployment_config:
+      instance_type: "ml.g5.2xlarge"
+      num_instances: 1
+    evaluation_config:
+      output: '[0].generated_text'
+      content_template: "PROMPT_PLACEHOLDER"
+      inference_parameters: 
+        max_new_tokens: 100
+        top_p: 0.8
+        temperature: 0.01
+        return_full_text: false
+        repetition_penalty: 1.03
+      custom_attributes:
+        accept_eula: True
+      prompt_template: '$feature'
+    cleanup_endpoint: True
+
+  - name: "llama2-7b-finetuned"
+    model_id: "meta-textgeneration-llama-2-7b"
+    model_version: "3.0.0"
+    endpoint_name: "llm-eval-meta-textgeneration-llama-2-7b-finetuned"
+    finetuning:
+      train_data_path: "train_dataset"
+      validation_data_path: "val_dataset"
+      parameters:
+        instance_type: "ml.g5.12xlarge"
+        num_instances: 1
+        epoch: 1
+        max_input_length: 100
+        instruction_tuned: True
+        chat_dataset: False
+    deployment_config:
+      instance_type: "ml.g5.2xlarge"
+      num_instances: 1
+    evaluation_config:
+      output: '[0].generation'
+      content_template: "PROMPT_PLACEHOLDER"
+      inference_parameters:
+        max_new_tokens: 100
+        top_p: 0.9
+        temperature: 0.6
+        return_full_text: False
+      custom_attributes:
+        accept_eula: True
+      prompt_template: "$feature"
+    register_config:
+      model_package_group_name: "FMEvaluationFineTunedModel"
+    cleanup_endpoint: True
+
+algorithms:
+  - algorithm: "FactualKnowledge" 
+    module: "fmeval.eval_algorithms.factual_knowledge"
+    config: "FactualKnowledgeConfig"
+    target_output_delimiter: "<OR>"

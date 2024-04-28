@@ -1,0 +1,6 @@
+pandas
+ipywidgets
+sagemaker
+fmeval
+markdown
+s3fs
