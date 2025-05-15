@@ -1,1 +1,5 @@
 .venv/*
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+.jupyter
+jupyter_execute_cache/
