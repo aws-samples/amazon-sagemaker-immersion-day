@@ -1,2 +1,0 @@
-sagemaker==2.199.0
-s3fs

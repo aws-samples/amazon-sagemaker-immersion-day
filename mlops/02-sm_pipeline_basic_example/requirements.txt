@@ -1,0 +1,9 @@
+scikit-learn
+xgboost==2.1.4
+s3fs==0.4.2
+sagemaker
+pandas
+gevent
+geventhttpclient
+mlflow-skinny==2.16.2
+sagemaker-mlflow
