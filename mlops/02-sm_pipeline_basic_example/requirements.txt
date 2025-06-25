@@ -5,5 +5,5 @@ sagemaker
 pandas
 gevent
 geventhttpclient
-mlflow-skinny==2.16.2
+mlflow==2.22.1
 sagemaker-mlflow
