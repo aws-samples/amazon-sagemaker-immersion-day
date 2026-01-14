@@ -1,7 +1,7 @@
 scikit-learn
 xgboost==2.1.4
 s3fs==0.4.2
-sagemaker==2.254.1
+sagemaker==2.255.0
 pandas
 gevent
 geventhttpclient
