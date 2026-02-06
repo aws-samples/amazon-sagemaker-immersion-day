@@ -1,10 +1,10 @@
 scikit-learn
-xgboost==2.1.4
+xgboost==3.0.5
 s3fs==0.4.2
-sagemaker==2.255.0
+sagemaker==3.4.0
 pandas
 gevent
 geventhttpclient
-mlflow==2.22.1
-sagemaker-mlflow
+mlflow==3.4.0
+sagemaker-mlflow==0.2.0
 GitPython
