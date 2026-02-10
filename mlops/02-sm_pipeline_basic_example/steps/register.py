@@ -49,18 +49,18 @@ def register(
                 )
             )
 
-            # 1. Log model to MLflow and download artifacts
+            # 1. Log model to MLflow
             model_info = mlflow.xgboost.log_model(model, artifact_path="model")
-            local_model_path = mlflow.artifacts.download_artifacts(
-                run_id=nested_run.info.run_id, 
-                artifact_path="model"
-            )
-            
-            # 2. Create model.tar.gz and upload to S3
+
+            # 2. Save native XGBoost model and create model.tar.gz for SageMaker
+            tmp_dir = tempfile.mkdtemp()
+            native_model_path = os.path.join(tmp_dir, "xgboost-model")
+            model.save_model(native_model_path)
+
             model_tar_path = tempfile.mktemp(suffix=".tar.gz")
             with tarfile.open(model_tar_path, "w:gz") as tar:
-                tar.add(local_model_path, arcname=".")
-            
+                tar.add(native_model_path, arcname="xgboost-model")
+
             model_s3_uri = s3_path_join("s3://", bucket, f"models/{unique_name_from_base('model')}/model.tar.gz")
             with s3_fs.open(model_s3_uri, "wb") as f:
                 with open(model_tar_path, "rb") as local_f:
@@ -70,7 +70,7 @@ def register(
             image_uri = image_uris.retrieve(
                 framework="xgboost",
                 region=region,
-                version="1.7-1",
+                version="3.0-5",
             )
             container_def = {
                 "Image": image_uri,
