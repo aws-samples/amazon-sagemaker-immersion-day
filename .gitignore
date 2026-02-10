@@ -3,3 +3,4 @@
 */.ipynb_checkpoints/*
 .jupyter
 jupyter_execute_cache/
+*.pyc
