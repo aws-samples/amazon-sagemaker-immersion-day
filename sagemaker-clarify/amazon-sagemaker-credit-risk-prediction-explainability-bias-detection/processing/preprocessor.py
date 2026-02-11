@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import tarfile
 import sklearn
-from sklearn.externals import joblib
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.compose import make_column_transformer
@@ -57,6 +57,7 @@ if __name__ == "__main__":
     print("performing one hot encoding")
     transformer = make_column_transformer(
         (
+            OneHotEncoder(sparse_output=False),
             [
                 "credit_history",
                 "purpose",
@@ -69,7 +70,6 @@ if __name__ == "__main__":
                 "telephone",
                 "foreign_worker",
             ],
-            OneHotEncoder(sparse=False),
         ),
         remainder="passthrough",
     )

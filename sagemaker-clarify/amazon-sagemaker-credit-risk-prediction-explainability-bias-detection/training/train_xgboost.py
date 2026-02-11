@@ -4,7 +4,6 @@ import os
 import random
 import pandas as pd
 import glob
-import pickle as pkl
 
 import xgboost
 
@@ -17,7 +16,7 @@ def parse_args():
     parser.add_argument("--eta", type=float, default=0.05)
     parser.add_argument("--gamma", type=int, default=4)
     parser.add_argument("--min_child_weight", type=int, default=6)
-    parser.add_argument("--silent", type=int, default=0)
+    parser.add_argument("--verbosity", type=int, default=0)
     parser.add_argument("--objective", type=str, default="binary:logistic")
     parser.add_argument("--eval_metric", type=str, default="auc")
     parser.add_argument("--num_round", type=int, default=100)
@@ -35,7 +34,6 @@ def parse_args():
 def main():
 
     args = parse_args()
-    train_files_path, validation_files_path = args.train, args.validation
 
     train_features_path = os.path.join(args.train, "train_features.csv")
     train_labels_path = os.path.join(args.train, "train_labels.csv")
@@ -67,19 +65,24 @@ def main():
         "eta": args.eta,
         "gamma": args.gamma,
         "min_child_weight": args.min_child_weight,
-        "silent": args.silent,
+        "verbosity": args.verbosity,
         "objective": args.objective,
         "subsample": args.subsample,
         "eval_metric": args.eval_metric,
-        "early_stopping_rounds": args.early_stopping_rounds,
     }
 
     bst = xgboost.train(
-        params=params, dtrain=dtrain, evals=watchlist, num_boost_round=args.num_round
+        params=params,
+        dtrain=dtrain,
+        evals=watchlist,
+        num_boost_round=args.num_round,
+        early_stopping_rounds=args.early_stopping_rounds,
     )
 
     model_dir = os.environ.get("SM_MODEL_DIR")
-    pkl.dump(bst, open(model_dir + "/model.bin", "wb"))
+    model_path = os.path.join(model_dir, "xgboost-model")
+    bst.save_model(model_path)
+    print(f"Model saved to {model_path}")
 
 
 if __name__ == "__main__":
