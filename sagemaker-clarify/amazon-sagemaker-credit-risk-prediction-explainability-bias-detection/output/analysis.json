@@ -10,57 +10,67 @@
                         {
                             "name": "AD",
                             "description": "Accuracy Difference (AD)",
-                            "value": 0.0010908209437622274
+                            "value": -0.030987394957983194
                         },
                         {
                             "name": "CDDPL",
                             "description": "Conditional Demographic Disparity in Predicted Labels (CDDPL)",
-                            "value": -0.020121833178732673
+                            "value": -0.06297653696627087
                         },
                         {
                             "name": "DAR",
                             "description": "Difference in Acceptance Rates (DAR)",
-                            "value": -0.015043327556325758
+                            "value": -0.02673120687786723
                         },
                         {
                             "name": "DCA",
                             "description": "Difference in Conditional Acceptance (DCA)",
-                            "value": -0.022337762372424352
+                            "value": -0.002167395152259499
                         },
                         {
                             "name": "DCR",
                             "description": "Difference in Conditional Rejection (DCR)",
-                            "value": 0.02198111878258424
+                            "value": 0.3056581761617734
                         },
                         {
                             "name": "DI",
                             "description": "Disparate Impact (DI)",
-                            "value": 1.0436843714955653
+                            "value": 1.0678617796864076
                         },
                         {
                             "name": "DPPL",
                             "description": "Difference in Positive Proportions in Predicted Labels (DPPL)",
-                            "value": -0.03462346477052358
+                            "value": -0.05490465416936008
                         },
                         {
                             "name": "DRR",
                             "description": "Difference in Rejection Rates (DRR)",
-                            "value": -0.07510215584049595
+                            "value": 0.05910946918141169
                         },
                         {
                             "name": "FT",
                             "description": "Flip Test (FT)",
-                            "value": -0.10294117647058823
+                            "value": -0.07352941176470588
+                        },
+                        {
+                            "name": "GE",
+                            "description": "Generalized Entropy (GE)",
+                            "value": 0.06831853699927805
                         },
                         {
                             "name": "RD",
                             "description": "Recall Difference (RD)",
-                            "value": 0.007000000000000006
+                            "value": -0.029000000000000026
+                        },
+                        {
+                            "name": "SD",
+                            "description": "Specificity Difference (SD)",
+                            "value": -0.04678362573099415
                         },
                         {
                             "name": "TE",
                             "description": "Treatment Equality (TE)",
-                            "value": 0.06793179317931797
+                            "value": -0.10775862068965517
                         }
                     ]
                 }

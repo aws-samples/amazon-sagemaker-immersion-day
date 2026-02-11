@@ -8,7 +8,7 @@ import os
 import pandas as pd
 
 
-from sklearn.externals import joblib
+import joblib
 
 
 feature_columns_names = [
@@ -51,6 +51,10 @@ def input_fn(input_data, content_type):
                 df.reset_index(drop=True, inplace=True)
 
             df.columns = feature_columns_names
+
+        # Convert columns to proper numeric types (CSV reads all as strings when header row is mixed)
+        for col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col])
 
         return df
     else:

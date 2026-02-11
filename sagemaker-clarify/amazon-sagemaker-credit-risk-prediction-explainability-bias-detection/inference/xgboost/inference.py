@@ -1,26 +1,25 @@
-import pickle as pkl
 import json
+import os
 import numpy as np
 import xgboost as xgb
 
-from sagemaker_containers.beta.framework import content_types
-from sagemaker_xgboost_container import encoder as xgb_encoders
-
 
 def input_fn(input_data, content_type):
-    if content_type == content_types.JSON:
-        print("Recieved content type is json")
-        print("input_data is", input_data)
+    if content_type == "application/json":
         obj = json.loads(input_data)
-        print("obj", obj)
         array = np.array(obj)
         return xgb.DMatrix(array)
+    elif content_type == "text/csv":
+        data = []
+        for line in input_data.strip().split("\n"):
+            data.append([float(x) for x in line.split(",")])
+        return xgb.DMatrix(np.array(data))
     else:
-        print("content type is not json")
-        return xgb_encoders.decode(input_data, content_type)
+        raise ValueError(f"Unsupported content type: {content_type}")
 
 
 def model_fn(model_dir):
-    model_file = model_dir + "/model.bin"
-    model = pkl.load(open(model_file, "rb"))
-    return model
+    model_file = os.path.join(model_dir, "xgboost-model")
+    booster = xgb.Booster()
+    booster.load_model(model_file)
+    return booster
