@@ -1,3 +1,2 @@
-datasets
-transformers==4.36.2
-optimum-neuron==0.0.21
+datasets>=3.0.0
+transformers
