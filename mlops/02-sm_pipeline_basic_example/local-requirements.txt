@@ -13,3 +13,4 @@ geventhttpclient
 mlflow<4
 sagemaker-mlflow==0.2.0
 GitPython
+packaging<25
