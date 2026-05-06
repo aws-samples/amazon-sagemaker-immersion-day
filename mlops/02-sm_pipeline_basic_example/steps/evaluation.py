@@ -6,7 +6,7 @@ import mlflow
 from sklearn.metrics import mean_squared_error
 
 
-def evaluate(model, test_df, experiment_name="sm-pipeline-experiment", run_id=None):
+def evaluate(model, test_df, experiment_name="sm-id-pipeline-experiment", run_id=None):
     
     # Enable autologging in MLflow
     mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI'])

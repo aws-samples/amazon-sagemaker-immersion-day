@@ -20,7 +20,7 @@ def register(
     model_approval_status,
     model_package_group_name,
     bucket,
-    experiment_name="sm-pipeline-experiment",
+    experiment_name="sm-id-pipeline-experiment",
     run_id=None
 ):
     sagemaker_session = Session()

@@ -41,7 +41,7 @@ def merge_two_dicts(x, y):
     return z
 
 
-def preprocess(raw_data_s3_path: str, experiment_name: str = "sm-pipeline-experiment", run_id: str = None) -> tuple[pd.DataFrame, ...]:
+def preprocess(raw_data_s3_path: str, experiment_name: str = "sm-id-pipeline-experiment", run_id: str = None) -> tuple[pd.DataFrame, ...]:
     df = pd.read_csv(
         raw_data_s3_path,
         header=None,

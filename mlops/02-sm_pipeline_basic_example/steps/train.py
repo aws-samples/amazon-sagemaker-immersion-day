@@ -16,7 +16,7 @@ def train(
     min_child_weight=6,
     subsample=0.7,
     use_gpu=False,
-    experiment_name = "sm-pipeline-experiment",
+    experiment_name = "sm-id-pipeline-experiment",
     run_id=None
 ):
 
