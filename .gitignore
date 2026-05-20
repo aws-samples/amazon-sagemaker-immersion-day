@@ -4,3 +4,11 @@
 .jupyter
 jupyter_execute_cache/
 *.pyc
+__pycache__/
+
+# macOS metadata
+.DS_Store
+
+# Generated outputs from notebook runs (don't commit)
+**/output/
+**/image_path_resized.png
