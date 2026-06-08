@@ -7,4 +7,4 @@ Otherwise, you will get an error message prompting you to provide an image_uri w
 - Please update your configurations, e.g. RoleArn, in the `config.yaml` if needed.
 
 ## Run the example
-Run all the cells of [runme.ipynb](runme.ipynb)
+Run all the cells of [02_sagemaker-pipelines.ipynb](02_sagemaker-pipelines.ipynb)

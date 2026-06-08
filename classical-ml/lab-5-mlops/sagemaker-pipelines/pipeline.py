@@ -38,29 +38,33 @@ if __name__ == "__main__":
         run_id = run.info.run_id
         print(run)
 
-        data = step(preprocess, name="Abalone_Data_Preprocessing")(
+        data = step(preprocess, name="Abalone_Data_Preprocessing", keep_alive_period_in_seconds=600)(
             input_path,
+            experiment_name=args.mlflow_experiment_name,
             run_id=run_id
         )
 
-        model = step(train, name="Model_Training")(
+        model = step(train, name="Model_Training", keep_alive_period_in_seconds=3600)(
             train_df=data[0],
             validation_df=data[1],
+            experiment_name=args.mlflow_experiment_name,
             run_id=run_id
         )
 
-        evaluation_result = step(evaluate, name="Model_Evaluation")(
+        evaluation_result = step(evaluate, name="Model_Evaluation", keep_alive_period_in_seconds=600)(
             model=model,
             test_df=data[2],
+            experiment_name=args.mlflow_experiment_name,
             run_id=run_id
         )
 
-        model_register = step(register, name="Model_Registration")(
+        model_register = step(register, name="Model_Registration", keep_alive_period_in_seconds=600)(
             model=model,
             evaluation=evaluation_result,
             model_approval_status=model_approval_status_param,
             model_package_group_name=model_pkg_group_name,
             bucket=bucket,
+            experiment_name=args.mlflow_experiment_name,
             run_id=run_id
         )
 
