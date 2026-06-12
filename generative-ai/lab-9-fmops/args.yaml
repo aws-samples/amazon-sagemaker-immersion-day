@@ -1,0 +1,66 @@
+
+# MLflow Config
+mlflow_uri: "arn:aws:sagemaker:us-west-2:767397657611:mlflow-app/app-SEFNHKUWJDHZ"                # The URI for the MLflow tracking server 
+mlflow_experiment_name: "qwen3-finetune-pipeline"  # Name of the MLflow experiment for organizing runs
+
+
+model_id: "s3://sagemaker-us-west-2-767397657611/models/Qwen_Qwen3-4B-Instruct-2507"              # Hugging Face model id, or S3 location of base model
+
+# SageMaker specific parameters 
+output_dir: "/opt/ml/model"                # Path where SageMaker will upload the model 
+train_dataset_path: "/opt/ml/input/data/train/"   # Path where FSx saves train dataset
+test_dataset_path: "/opt/ml/input/data/test/"     # Path where FSx saves test dataset
+
+# Training parameters
+max_seq_length: 1500                       # Maximum sequence length for inputs (affects memory usage)
+                                           # Higher values allow for longer context but require more memory
+                                           # Range: 512-4096 depending on model architecture and hardware
+
+# LoRA parameters (Low-Rank Adaptation)
+lora_r: 8                                  # Rank of the LoRA update matrices
+                                           # Lower values (4-16) are more efficient, higher values (32-64) can improve quality
+                                           # Recommended range: 8-64 depending on task complexity
+lora_alpha: 16                             # Scaling factor for the LoRA update
+                                           # Generally set to 2x lora_r for good performance
+lora_dropout: 0.1                          # Dropout probability for LoRA layers
+                                           # Range: 0.0-0.5, helps prevent overfitting
+
+# Optimizer parameters
+learning_rate: 2e-4                        # Learning rate for parameter updates
+                                           # Range: 1e-5 to 5e-4 for LoRA fine-tuning
+                                           # Too high: training instability, too low: slow convergence
+
+# Training loop parameters
+num_train_epochs: 1                        # Number of complete passes through the training dataset
+                                           # More epochs can improve performance but risk overfitting
+                                           # Range: 1-5 for LoRA fine-tuning
+per_device_train_batch_size: 2             # Number of samples per GPU during training
+                                           # Larger values improve training speed but require more memory
+                                           # Range: 1-8 for large models on common GPUs
+per_device_eval_batch_size: 1              # Number of samples per GPU during evaluation
+                                           # Can typically be larger than training batch size
+gradient_accumulation_steps: 2             # Accumulate gradients over multiple steps
+                                           # Effectively increases batch size by this factor
+                                           # Useful when limited by GPU memory
+
+# Memory optimization techniques
+gradient_checkpointing: true               # Reduces memory usage by recomputing activations during backward pass
+                                           # Trades computation for memory, ~20% slower but enables larger models/sequences
+fp16: true                                 # Use half-precision floating point (speeds up training, reduces memory)
+bf16: false                                # Use bfloat16 precision (better numerical stability than fp16)
+                                           # Also enables FlashAttention2 (requires Ampere/Hopper GPU+ eg:A10, A100, H100)
+tf32: false                                # Use TensorFloat-32 precision (NVIDIA Ampere+ GPUs only)
+
+#uncomment here for fsdp - start
+# fsdp: "full_shard auto_wrap offload"     # Fully Sharded Data Parallel training
+                                           # Splits model states across multiple GPUs
+# fsdp_config:                             # Configuration for FSDP
+#     backward_prefetch: "backward_pre"    # Prefetches parameters before backward pass
+#     cpu_ram_efficient_loading: true      # More memory-efficient parameter loading
+#     offload_params: true                 # Offloads parameters to CPU when not in use
+#     forward_prefetch: false              # Don't prefetch parameters for forward pass
+#     use_orig_params: true                # Use original parameter ordering
+#uncomment here for fsdp - end
+
+merge_weights: true                        # Merge adapter weights into the base model
+                                           # true: produces standalone model, false: keeps adapter separate
