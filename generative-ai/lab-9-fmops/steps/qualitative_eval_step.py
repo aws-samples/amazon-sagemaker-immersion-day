@@ -145,7 +145,7 @@ def qualitative_evaluate(
             examples=medical_accuracy_examples,
             version="v1",
             # model="bedrock:/global.anthropic.claude-haiku-4-5-20251001-v1:0",
-            model="bedrock:/global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            model="bedrock:/global.anthropic.claude-sonnet-4-6",
             parameters={
                 "anthropic_version": "bedrock-2023-05-31",
                 "temperature": 0.0,
@@ -194,7 +194,7 @@ def qualitative_evaluate(
             examples=clinical_reasoning_examples,
             version="v1",
             # model="bedrock:/global.anthropic.claude-haiku-4-5-20251001-v1:0",
-            model="bedrock:/global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            model="bedrock:/global.anthropic.claude-sonnet-4-6",
             parameters={
                 "anthropic_version": "bedrock-2023-05-31",
                 "temperature": 0.0,
@@ -241,7 +241,7 @@ def qualitative_evaluate(
             examples=patient_safety_examples,
             version="v1",
             # model="bedrock:/global.anthropic.claude-haiku-4-5-20251001-v1:0",
-            model="bedrock:/global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            model="bedrock:/global.anthropic.claude-sonnet-4-6",
             parameters={
                 "anthropic_version": "bedrock-2023-05-31",
                 "temperature": 0.0,
@@ -493,7 +493,7 @@ def qualitative_evaluate(
             mlflow.log_param("qualitative_evaluation_endpoint", endpoint_name)
             mlflow.log_param("qualitative_evaluation_num_samples", num_samples)
             mlflow.log_param("qualitative_evaluation_timestamp", datetime.now().isoformat())
-            mlflow.log_param("llm_judge_model", "bedrock:/global.anthropic.claude-sonnet-4-5-20250929-v1:0")
+            mlflow.log_param("llm_judge_model", "bedrock:/global.anthropic.claude-sonnet-4-6")
             
             # Load the test dataset
             try:

@@ -44,7 +44,7 @@ if __name__ == "__main__":
             run_id=run_id
         )
 
-        model = step(train, name="Model_Training", keep_alive_period_in_seconds=3600)(
+        model = step(train, name="Model_Training", keep_alive_period_in_seconds=600)(
             train_df=data[0],
             validation_df=data[1],
             experiment_name=args.mlflow_experiment_name,

@@ -1,10 +1,10 @@
 
 # MLflow Config
-mlflow_uri: "arn:aws:sagemaker:us-west-2:767397657611:mlflow-app/app-SEFNHKUWJDHZ"                # The URI for the MLflow tracking server 
+mlflow_uri: "arn:aws:sagemaker:us-west-2:381492082703:mlflow-app/app-2MBRNI3QAABM"                # The URI for the MLflow tracking server 
 mlflow_experiment_name: "qwen3-finetune-pipeline"  # Name of the MLflow experiment for organizing runs
 
 
-model_id: "s3://sagemaker-us-west-2-767397657611/models/Qwen_Qwen3-4B-Instruct-2507"              # Hugging Face model id, or S3 location of base model
+model_id: "s3://sagemaker-us-west-2-381492082703/models/Qwen_Qwen3-4B-Instruct-2507"              # Hugging Face model id, or S3 location of base model
 
 # SageMaker specific parameters 
 output_dir: "/opt/ml/model"                # Path where SageMaker will upload the model 
