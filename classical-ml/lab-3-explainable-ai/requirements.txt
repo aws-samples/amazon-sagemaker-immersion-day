@@ -1,0 +1,6 @@
+# Lab 3 (Explainability & Bias) notebook-kernel extras.
+# Installed on top of the repo-root requirements.txt via uv.
+#
+# numpy is pinned here (not in the shared root requirements) because the
+# constraint exists only for shap compatibility in this lab.
+numpy<2.4
