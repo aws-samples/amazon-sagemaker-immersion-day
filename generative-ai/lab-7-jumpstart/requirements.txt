@@ -1,0 +1,5 @@
+# Lab 7 (JumpStart) notebook-kernel extras.
+# Installed on top of the repo-root requirements.txt via uv.
+ipywidgets==7.0.0
+langchain
+datasets

@@ -1,0 +1,46 @@
+# =============================================================================
+# SageMaker Immersion Day - shared core kernel dependencies
+# =============================================================================
+# Single source of truth for the interactive NOTEBOOK KERNEL across the
+# classical-ml/ and generative-ai/ labs. Installed once by Setup.ipynb and,
+# idempotently, at the top of every lab notebook via uv:
+#
+#     import sys
+#     !uv pip install --python {sys.executable} -r <path-to>/requirements.txt
+#
+# NOTE: This file targets the notebook kernel only. Remote SageMaker training /
+# processing / pipeline jobs keep their own pinned requirements files
+# (e.g. lab-8*/src/requirements.txt, lab-9-fmops/scripts|eval/requirements.txt,
+# lab-5-mlops/sagemaker-pipelines/requirements.txt). Do not fold those in here.
+#
+# Tested with SageMaker Distribution Image 4.0.3 (Python 3.12) and
+# SageMaker Python SDK 3.13.1.
+# =============================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- SageMaker Python SDK v3 suite ---
+sagemaker==3.13.1
+sagemaker-core==2.13.1
+sagemaker-train==1.13.1
+sagemaker-serve==1.13.1
+sagemaker-mlops==1.13.1
+
+# --- Experiment tracking (MLflow) ---
+mlflow<4
+sagemaker-mlflow==0.3.0
+
+# --- Data wrangling / visualization ---
+pandas==2.1.4
+matplotlib==3.8.4
+awswrangler==3.5.1
+
+# --- Classical ML utilities ---
+numpy<2.4
+scikit-learn
+xgboost
+shap
+evidently>=0.7.20
+
+# --- Deep learning (CPU wheels via the extra-index-url above) ---
+torchvision
