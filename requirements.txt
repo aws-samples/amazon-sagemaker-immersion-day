@@ -31,14 +31,16 @@ mlflow<4
 sagemaker-mlflow==0.3.0
 
 # --- Data wrangling / visualization ---
-pandas==2.1.4
-matplotlib==3.8.4
+pandas>=2,<3
+matplotlib<4
 awswrangler==3.5.1
 
 # --- Classical ML utilities ---
-numpy<2.4
-scikit-learn
-xgboost
+# NOTE: numpy is intentionally NOT pinned here. The only numpy constraint
+# (numpy<2.4, for shap) lives in classical-ml/lab-3-explainable-ai/requirements.txt
+# so it does not constrain every other lab's kernel.
+scikit-learn==1.4.2
+xgboost==3.0.5
 shap
 evidently>=0.7.20
 
