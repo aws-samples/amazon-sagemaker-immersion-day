@@ -1,0 +1,8 @@
+# Dependencies pip-installed into the sklearn processing container by
+# FrameworkProcessor before running shap_explainability.py.
+# The base sklearn container already provides scikit-learn, pandas, numpy.
+shap
+xgboost==3.0.5
+matplotlib<4
+mlflow<4
+sagemaker-mlflow>=0.5.0,<1
