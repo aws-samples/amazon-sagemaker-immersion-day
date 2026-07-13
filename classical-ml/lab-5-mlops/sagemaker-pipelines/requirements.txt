@@ -11,5 +11,5 @@ pandas==2.1.4
 gevent
 geventhttpclient
 mlflow<4
-sagemaker-mlflow<1
+sagemaker-mlflow>=0.5.0,<1
 packaging<25

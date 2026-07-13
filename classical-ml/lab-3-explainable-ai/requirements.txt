@@ -24,7 +24,7 @@ sagemaker-mlops==1.13.1
 
 # --- Experiment tracking (MLflow) ---
 mlflow<4
-sagemaker-mlflow==0.3.0
+sagemaker-mlflow>=0.5.0,<1
 
 # --- Data wrangling / visualization ---
 pandas>=2,<3
