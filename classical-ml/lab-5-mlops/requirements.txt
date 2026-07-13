@@ -1,13 +1,19 @@
 # =============================================================================
-# SageMaker Immersion Day - Lab 6 (Serverless Fine-Tuning) - self-contained kernel deps
+# SageMaker Immersion Day - Lab 5 (MLOps) - self-contained kernel deps
 # =============================================================================
-# Complete notebook-KERNEL dependency set for this lab. Install this file alone
+# Complete notebook-KERNEL dependency set for this lab (covers both the
+# mlflow-tracking and sagemaker-pipelines notebooks). Install this file alone
 # to provision the kernel - Setup.ipynb is NOT required:
 #
 #     import sys
 #     !uv pip install --python {sys.executable} -r requirements.txt
 #
-# Inlines the shared SageMaker Distribution kernel stack plus this lab's extras.
+# Inlines the shared kernel stack plus the extras the sagemaker-pipelines
+# notebook installs from its local-requirements.txt. The REMOTE pipeline/step
+# deps (sagemaker-pipelines/requirements.txt) run inside jobs and are NOT here.
+#
+# Override note: pandas is pinned to 2.1.4 (within the shared >=2,<3 range) to
+# match what the pipelines notebook tests against.
 # Tested against SageMaker Distribution 4.x (Python 3.12), SageMaker SDK 3.13.1.
 # =============================================================================
 
@@ -25,7 +31,8 @@ mlflow<4
 sagemaker-mlflow==0.3.0
 
 # --- Data wrangling / visualization ---
-pandas>=2,<3
+# pandas pinned to 2.1.4 for the sagemaker-pipelines notebook (within >=2,<3).
+pandas==2.1.4
 matplotlib<4
 awswrangler==3.5.1
 
@@ -38,5 +45,9 @@ evidently>=0.7.20
 # --- Deep learning (CPU wheels via the extra-index-url above) ---
 torchvision
 
-# --- Lab 6 extras ---
-datasets==4.5.0
+# --- Lab 5 extras (from sagemaker-pipelines/local-requirements.txt) ---
+s3fs==0.4.2
+gevent
+geventhttpclient
+GitPython
+packaging<25

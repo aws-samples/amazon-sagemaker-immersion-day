@@ -1,0 +1,65 @@
+# =============================================================================
+# SageMaker Immersion Day - Lab 9 (FMOps) - self-contained kernel deps
+# =============================================================================
+# Complete notebook-KERNEL dependency set for this lab (covers 00_fmops_examples
+# and 01_fine-tuning-pipeline). Install this file alone to provision the kernel -
+# Setup.ipynb is NOT required:
+#
+#     import sys
+#     !uv pip install --python {sys.executable} -r requirements.txt
+#
+# Inlines the shared kernel stack plus the fine-tuning/eval libraries the lab
+# notebooks install into the kernel (from scripts/requirements.txt). The remote
+# training/eval step deps (scripts/requirements.txt, eval/requirements.txt) are
+# left in place for the jobs themselves.
+#
+# Override note: scikit-learn is pinned to 1.6.1 here (this lab's requirement),
+# which supersedes the shared stack's 1.4.2 pin.
+# Tested against SageMaker Distribution 4.x (Python 3.12), SageMaker SDK 3.13.1.
+# =============================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- SageMaker Python SDK v3 suite ---
+sagemaker==3.13.1
+sagemaker-core==2.13.1
+sagemaker-train==1.13.1
+sagemaker-serve==1.13.1
+sagemaker-mlops==1.13.1
+
+# --- Experiment tracking (MLflow) ---
+mlflow<4
+sagemaker-mlflow==0.3.0
+
+# --- Data wrangling / visualization ---
+pandas>=2,<3
+matplotlib<4
+awswrangler==3.5.1
+
+# --- Classical ML utilities ---
+# scikit-learn pinned to 1.6.1 for this lab (supersedes the shared 1.4.2 pin).
+scikit-learn==1.6.1
+xgboost==3.0.5
+shap
+evidently>=0.7.20
+
+# --- Deep learning (CPU wheels via the extra-index-url above) ---
+torchvision
+
+# --- Lab 9 extras (fine-tuning / eval stack, from scripts/requirements.txt) ---
+transformers==4.52.2
+peft==0.14.0
+accelerate==1.3.0
+bitsandbytes==0.45.1
+datasets==3.2.0
+evaluate==0.4.3
+huggingface_hub[hf_transfer]==0.33.4
+safetensors>=0.5.2
+sentencepiece==0.2.0
+tokenizers>=0.21.0
+trl==0.18.0
+psutil==7.1.0
+py7zr==1.0.0
+xtarfile==0.2.1
+rouge-score==0.1.2
+nvidia-ml-py==13.590.48
