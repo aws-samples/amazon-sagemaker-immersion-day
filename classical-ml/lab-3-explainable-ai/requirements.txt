@@ -1,6 +1,45 @@
-# Lab 3 (Explainability & Bias) notebook-kernel extras.
-# Installed on top of the repo-root requirements.txt via uv.
+# =============================================================================
+# SageMaker Immersion Day - Lab 3 (Explainability & Bias) - self-contained kernel deps
+# =============================================================================
+# Complete notebook-KERNEL dependency set for this lab. Install this file alone
+# to provision the kernel - Setup.ipynb is NOT required:
 #
-# numpy is pinned here (not in the shared root requirements) because the
-# constraint exists only for shap compatibility in this lab.
+#     import sys
+#     !uv pip install --python {sys.executable} -r requirements.txt
+#
+# Inlines the shared SageMaker Distribution kernel stack plus this lab's extras.
+# Lab-specific: numpy is pinned <2.4 for shap compatibility (this constraint is
+# intentionally NOT in the shared stack so it does not constrain other labs).
+# Tested against SageMaker Distribution 4.x (Python 3.12), SageMaker SDK 3.13.1.
+# =============================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- SageMaker Python SDK v3 suite ---
+sagemaker==3.13.1
+sagemaker-core==2.13.1
+sagemaker-train==1.13.1
+sagemaker-serve==1.13.1
+sagemaker-mlops==1.13.1
+
+# --- Experiment tracking (MLflow) ---
+mlflow<4
+sagemaker-mlflow==0.3.0
+
+# --- Data wrangling / visualization ---
+pandas>=2,<3
+matplotlib<4
+awswrangler==3.5.1
+
+# --- Classical ML utilities ---
+scikit-learn==1.4.2
+xgboost==3.0.5
+shap
+evidently>=0.7.20
+
+# --- Deep learning (CPU wheels via the extra-index-url above) ---
+torchvision
+
+# --- Lab 3 extras ---
+# numpy pinned for shap compatibility in this lab.
 numpy<2.4

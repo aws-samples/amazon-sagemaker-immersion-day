@@ -1,5 +1,5 @@
 # =============================================================================
-# SageMaker Immersion Day - Lab 6 (Serverless Fine-Tuning) - self-contained kernel deps
+# SageMaker Immersion Day - Lab 4 (Model Monitoring) - self-contained kernel deps
 # =============================================================================
 # Complete notebook-KERNEL dependency set for this lab. Install this file alone
 # to provision the kernel - Setup.ipynb is NOT required:
@@ -7,7 +7,9 @@
 #     import sys
 #     !uv pip install --python {sys.executable} -r requirements.txt
 #
-# Inlines the shared SageMaker Distribution kernel stack plus this lab's extras.
+# This inlines the shared SageMaker Distribution kernel stack. Lab 4 needs no
+# lab-specific kernel extras. The monitoring/training scripts this lab writes to
+# scripts/requirements.txt run INSIDE remote jobs and are NOT folded in here.
 # Tested against SageMaker Distribution 4.x (Python 3.12), SageMaker SDK 3.13.1.
 # =============================================================================
 
@@ -37,6 +39,3 @@ evidently>=0.7.20
 
 # --- Deep learning (CPU wheels via the extra-index-url above) ---
 torchvision
-
-# --- Lab 6 extras ---
-datasets==4.5.0
