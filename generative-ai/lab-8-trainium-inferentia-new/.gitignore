@@ -1,0 +1,9 @@
+# Generated datasets (created by notebook)
+datasets/
+
+# Training job artifacts
+training_job_name.txt
+
+# Python
+__pycache__/
+*.pyc

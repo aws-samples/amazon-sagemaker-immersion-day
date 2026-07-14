@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  inf2.xlarge EC2 instance for compiling Neuron models for Inferentia2 inference.
+  SSM-enabled (no SSH key needed), admin role attached.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: inf2.xlarge
+    AllowedValues:
+      - inf2.xlarge
+      - inf2.8xlarge
+  AmiId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-05235a8b272ee7f7e
+    Description: Deep Learning Base Neuron AMI (Ubuntu 22.04) 20260511 in us-east-2
+  VolumeSize:
+    Type: Number
+    Default: 256
+    Description: Root EBS volume size in GB
+
+Resources:
+  Inf2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-inf2-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  Inf2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Inf2Role
+
+  Inf2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow outbound only (SSM access, no inbound SSH needed)
+
+  Inf2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref AmiId
+      IamInstanceProfile: !Ref Inf2InstanceProfile
+      SecurityGroupIds:
+        - !Ref Inf2SecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: gp3
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-inf2-compile"
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -ex
+          # Ensure SSM agent is running
+          snap install amazon-ssm-agent --classic || true
+          systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+          systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+Outputs:
+  InstanceId:
+    Description: EC2 Instance ID (use for SSM session)
+    Value: !Ref Inf2Instance
+  ConnectCommand:
+    Description: Connect via SSM
+    Value: !Sub "aws ssm start-session --target ${Inf2Instance} --region ${AWS::Region}"

@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  trn1.2xlarge EC2 instance for debugging Neuron training scripts.
+  SSM-enabled (no SSH key needed), admin role attached.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: trn1.2xlarge
+    AllowedValues:
+      - trn1.2xlarge
+      - trn1.32xlarge
+  AmiId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-05235a8b272ee7f7e
+    Description: Deep Learning Base Neuron AMI (Ubuntu 22.04) 20260511 in us-east-2
+  VolumeSize:
+    Type: Number
+    Default: 256
+    Description: Root EBS volume size in GB
+
+Resources:
+  Trn1Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-trn1-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  Trn1InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Trn1Role
+
+  Trn1SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow outbound only (SSM access, no inbound SSH needed)
+
+  Trn1Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref AmiId
+      IamInstanceProfile: !Ref Trn1InstanceProfile
+      SecurityGroupIds:
+        - !Ref Trn1SecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: gp3
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-trn1-debug"
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -ex
+          # Ensure SSM agent is running
+          snap install amazon-ssm-agent --classic || true
+          systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+          systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+Outputs:
+  InstanceId:
+    Description: EC2 Instance ID (use for SSM session)
+    Value: !Ref Trn1Instance
+  ConnectCommand:
+    Description: Connect via SSM
+    Value: !Sub "aws ssm start-session --target ${Trn1Instance} --region ${AWS::Region}"

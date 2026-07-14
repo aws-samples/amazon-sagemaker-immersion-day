@@ -1,0 +1,8 @@
+# Notebook dependencies (run on CPU kernel, e.g. ml.t3.large)
+# Heavy Neuron SDK operations (training, consolidation) run on SageMaker jobs,
+# not in the notebook kernel.
+boto3
+sagemaker>=3.13.1
+datasets>=3.0.0
+transformers>=4.45.0
+peft>=0.17.0

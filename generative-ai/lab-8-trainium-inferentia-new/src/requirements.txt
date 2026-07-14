@@ -1,0 +1,1 @@
+optimum-neuron[training]==0.4.2
