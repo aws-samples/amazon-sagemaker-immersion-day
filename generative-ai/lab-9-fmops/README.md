@@ -47,7 +47,7 @@ layout. Changes made on import to match Immersion Day conventions:
   (`describe_mlflow_tracking_server`, name `genai-mlflow-tracker`) to the
   MLflow **Apps** API (`list_mlflow_apps`, name `mlflow-app`, auto-create).
 - `sagemaker` / `sagemaker-mlflow` pins aligned to the Immersion Day baseline
-  (`sagemaker>=3.7.1,<4`, `sagemaker-mlflow==0.3.0`).
+  (`sagemaker>3,<4`, `sagemaker-mlflow>=0.5.0,<1`).
 - Prerequisite wording updated from "MLflow tracking server" to "MLflow app".
 
 > **Not yet validated end-to-end in this repo.** The training/eval container
