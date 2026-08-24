@@ -21,11 +21,11 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # --- SageMaker Python SDK v3 suite ---
-sagemaker==3.13.1
-sagemaker-core==2.13.1
-sagemaker-train==1.13.1
-sagemaker-serve==1.13.1
-sagemaker-mlops==1.13.1
+sagemaker>3,<4
+sagemaker-core>=2,<3
+sagemaker-train>=1,<2
+sagemaker-serve>=1,<2
+sagemaker-mlops>=1,<2
 
 # --- Experiment tracking (MLflow) ---
 mlflow<4
