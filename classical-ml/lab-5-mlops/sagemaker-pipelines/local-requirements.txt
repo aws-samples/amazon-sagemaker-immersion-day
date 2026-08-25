@@ -2,7 +2,7 @@
 scikit-learn
 xgboost==3.0.5
 s3fs==0.4.2
-sagemaker>3,<4
+sagemaker>=3,<4
 sagemaker-core>=2,<3
 sagemaker-train>=1,<2
 sagemaker-serve>=1,<2
