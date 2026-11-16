@@ -20,3 +20,7 @@ Changes compared to v1.5:
 - `test/payload.csv` contains one preprocessed, 10-feature record of the abalone dataset.
 - `test/test.py` requires a finite, positive prediction (the number of rings) instead of a probability.
 - `test/buildspec.yml` expects 10 features.
+
+## Diagrams
+- [`img/deployment-project-architecture.svg`](img/deployment-project-architecture.svg) is the deployment diagram of notebook 05 of the amazon-sagemaker-from-idea-to-production workshop (`img/deployment-project-architecture-aws.svg`), unchanged.
+- [`img/model-build-project-architecture.svg`](img/model-build-project-architecture.svg) follows the same style. [`design/build_diagrams.py`](design/build_diagrams.py) generates it with the AWS Architecture Icons in `design/icons`. Run `python design/build_diagrams.py` from this folder after you change it.
