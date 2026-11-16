@@ -52,19 +52,21 @@ def register(
             # 1. Log model to MLflow
             model_info = mlflow.xgboost.log_model(model, artifact_path="model")
 
-            # 2. Save native XGBoost model and create model.tar.gz for SageMaker
-            tmp_dir = tempfile.mkdtemp()
-            native_model_path = os.path.join(tmp_dir, "xgboost-model")
-            model.save_model(native_model_path)
-
-            model_tar_path = tempfile.mktemp(suffix=".tar.gz")
-            with tarfile.open(model_tar_path, "w:gz") as tar:
-                tar.add(native_model_path, arcname="xgboost-model")
-
+            # 2. Save native XGBoost model and create model.tar.gz for SageMaker.
+            # TemporaryDirectory creates a private directory (mode 0700) for both files
+            # and deletes it at the end, so no other process can swap the files in between.
             model_s3_uri = s3_path_join("s3://", bucket, f"models/{unique_name_from_base('model')}/model.tar.gz")
-            with s3_fs.open(model_s3_uri, "wb") as f:
-                with open(model_tar_path, "rb") as local_f:
-                    f.write(local_f.read())
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                native_model_path = os.path.join(tmp_dir, "xgboost-model")
+                model.save_model(native_model_path)
+
+                model_tar_path = os.path.join(tmp_dir, "model.tar.gz")
+                with tarfile.open(model_tar_path, "w:gz") as tar:
+                    tar.add(native_model_path, arcname="xgboost-model")
+
+                with s3_fs.open(model_s3_uri, "wb") as f:
+                    with open(model_tar_path, "rb") as local_f:
+                        f.write(local_f.read())
 
             # 3. Register model package directly via core API (no sagemaker.serve dependency)
             image_uri = image_uris.retrieve(
