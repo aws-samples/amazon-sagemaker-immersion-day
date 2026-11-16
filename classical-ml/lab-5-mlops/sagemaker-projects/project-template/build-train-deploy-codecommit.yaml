@@ -1,0 +1,448 @@
+Description: Toolchain template which provides the resources needed to represent infrastructure as code.
+  This template creates a CI/CD pipeline that builds a model with a SageMaker pipeline, and a CI/CD pipeline
+  that deploys the approved model versions from the SageMaker Model Registry to two stages -- staging and production.
+  Both code repositories are AWS CodeCommit repositories seeded from ZIP files in Amazon S3.
+  Based on the SageMaker-provided "MLOps template for model building, training, and deployment" v1.5.
+
+Parameters:
+  SageMakerProjectName:
+    Type: String
+    Description: Name of the project
+    NoEcho: true
+    MinLength: 1
+    MaxLength: 32
+    AllowedPattern: ^[a-zA-Z](-*[a-zA-Z0-9])*
+
+  SageMakerProjectId:
+    Type: String
+    NoEcho: true
+    Description: Service generated Id of the project.
+
+  SeedCodeBucket:
+    Type: String
+    MinLength: 3
+    Description: S3 bucket in this Region that contains the seed code ZIP files.
+
+  ModelBuildSeedCodeKey:
+    Type: String
+    MinLength: 1
+    Description: S3 object key of the model build seed code ZIP file.
+
+  ModelDeploySeedCodeKey:
+    Type: String
+    MinLength: 1
+    Description: S3 object key of the model deployment seed code ZIP file.
+
+  MlflowTrackingServerArn:
+    Type: String
+    MinLength: 1
+    Description: ARN of the SageMaker managed MLflow app that the model build pipeline logs to.
+
+  PipelineStepImageUri:
+    Type: String
+    MinLength: 1
+    Description: Container image of the SageMaker pipeline steps. Its Python version must match the Python version of the model build CodeBuild project (3.12).
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Seed code"
+        Parameters:
+          - SeedCodeBucket
+          - ModelBuildSeedCodeKey
+          - ModelDeploySeedCodeKey
+      -
+        Label:
+          default: "Model build"
+        Parameters:
+          - MlflowTrackingServerArn
+          - PipelineStepImageUri
+    ParameterLabels:
+      SeedCodeBucket:
+        default: "Seed code S3 bucket"
+      ModelBuildSeedCodeKey:
+        default: "Model build seed code S3 key"
+      ModelDeploySeedCodeKey:
+        default: "Model deployment seed code S3 key"
+      MlflowTrackingServerArn:
+        default: "MLflow app ARN"
+      PipelineStepImageUri:
+        default: "Pipeline step image URI"
+
+Resources:
+  MlOpsArtifactsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub sagemaker-project-${SageMakerProjectId} # 58 chars max/ 64 allowed
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  ##### Section 1: Model build and train resources
+  ModelBuildCodeCommitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      # Max allowed length: 100 chars
+      RepositoryName: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modelbuild # max: 10+33+15+11=69
+      RepositoryDescription: !Sub SageMaker model building workflow infrastructure as code for the project ${SageMakerProjectName}
+      Code:
+        S3:
+          Bucket: !Ref SeedCodeBucket
+          Key: !Ref ModelBuildSeedCodeKey
+        BranchName: main
+
+  ModelBuildCodeCommitEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      # Max length allowed: 64
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-build # max: 10+33+15+6=64 chars
+      Description: "Rule to start the model build pipeline when the main branch of the model build CodeCommit repository is updated."
+      EventPattern:
+        source:
+          - "aws.codecommit"
+        detail-type:
+          - "CodeCommit Repository State Change"
+        resources:
+          - !GetAtt ModelBuildCodeCommitRepository.Arn
+        detail:
+          referenceType:
+            - "branch"
+          referenceName:
+            - "main"
+      State: "ENABLED"
+      Targets:
+        -
+          Arn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'codepipeline', !Ref 'AWS::Region', !Ref 'AWS::AccountId', !Ref ModelBuildPipeline ] ]
+          RoleArn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+          Id: !Sub codecommit-${SageMakerProjectName}-modelbuild
+
+  SageMakerModelPipelineBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      # Max length: 255 chars
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modelbuild # max: 10+33+15+11=69
+      Description: Builds the model building workflow code repository, creates the SageMaker pipeline and starts an execution
+      ServiceRole: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: SAGEMAKER_PROJECT_NAME
+            Value: !Ref SageMakerProjectName
+          - Name: SAGEMAKER_PROJECT_ID
+            Value: !Ref SageMakerProjectId
+          - Name: ARTIFACT_BUCKET
+            Value: !Ref MlOpsArtifactsBucket
+          - Name: SAGEMAKER_PIPELINE_NAME
+            Value: !Sub sagemaker-${SageMakerProjectName}
+          - Name: SAGEMAKER_PIPELINE_ROLE_ARN
+            Value: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+          - Name: MODEL_PACKAGE_GROUP_NAME
+            Value: !Sub ${SageMakerProjectName}-${SageMakerProjectId}
+          - Name: MLFLOW_TRACKING_URI
+            Value: !Ref MlflowTrackingServerArn
+          - Name: MLFLOW_EXPERIMENT_NAME
+            Value: !Sub sagemaker-${SageMakerProjectName}
+          - Name: PIPELINE_STEP_IMAGE_URI
+            Value: !Ref PipelineStepImageUri
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: codebuild-buildspec.yml
+      TimeoutInMinutes: 480
+
+  ModelBuildPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: MlOpsArtifactsBucket
+    Properties:
+      # Max length: 100 chars
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modelbuild # max: 10+33+15+11=69
+      RoleArn: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+      PipelineType: V2
+      ArtifactStore:
+        Type: S3
+        Location:
+          !Ref MlOpsArtifactsBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: ModelBuildWorkflowCode
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                # The EventBridge rule above starts the pipeline, so polling is off
+                PollForSourceChanges: false
+                RepositoryName: !GetAtt ModelBuildCodeCommitRepository.Name
+                BranchName: main
+              OutputArtifacts:
+                - Name: ModelBuildSourceArtifact
+        - Name: Build
+          Actions:
+            - Name: BuildAndExecuteSageMakerPipeline
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: ModelBuildSourceArtifact
+              OutputArtifacts:
+                - Name: ModelBuildBuildArtifact
+              Configuration:
+                ProjectName: !Ref SageMakerModelPipelineBuildProject
+              RunOrder: 1
+
+  ##### Section 2: Model deployment resources
+  ModelDeployCodeCommitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      # Max allowed length: 100 chars
+      RepositoryName: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modeldeploy # max: 10+33+15+12=70
+      RepositoryDescription: !Sub SageMaker endpoint deployment infrastructure as code for the project ${SageMakerProjectName}
+      Code:
+        S3:
+          Bucket: !Ref SeedCodeBucket
+          Key: !Ref ModelDeploySeedCodeKey
+        BranchName: main
+
+  ModelDeploySageMakerEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      # Max length allowed: 64
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-model # max: 10+33+15+6=64 chars
+      Description: "Rule to start a deployment when a model package version in the SageMaker Model Registry is approved or rejected."
+      EventPattern:
+        source:
+          - "aws.sagemaker"
+        detail-type:
+          - "SageMaker Model Package State Change"
+        detail:
+          ModelPackageGroupName:
+            - !Sub ${SageMakerProjectName}-${SageMakerProjectId}
+          ModelApprovalStatus:
+            - anything-but:
+                - PendingManualApproval
+      State: "ENABLED"
+      Targets:
+        -
+          Arn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'codepipeline', !Ref 'AWS::Region', !Ref 'AWS::AccountId', !Ref ModelDeployPipeline ] ]
+          RoleArn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+          Id: !Sub sagemaker-${SageMakerProjectName}-trigger
+
+  ModelDeployCodeCommitEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      # Max length allowed: 64
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-code # max: 10+33+15+5=63 chars
+      Description: "Rule to start a deployment when the main branch of the model deployment CodeCommit repository is updated."
+      EventPattern:
+        source:
+          - "aws.codecommit"
+        detail-type:
+          - "CodeCommit Repository State Change"
+        resources:
+          - !GetAtt ModelDeployCodeCommitRepository.Arn
+        detail:
+          referenceType:
+            - "branch"
+          referenceName:
+            - "main"
+      State: "ENABLED"
+      Targets:
+        -
+          Arn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'codepipeline', !Ref 'AWS::Region', !Ref 'AWS::AccountId', !Ref ModelDeployPipeline ] ]
+          RoleArn:
+            !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+          Id: !Sub codecommit-${SageMakerProjectName}-trigger
+
+  ModelDeployBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      # Max length: 255 chars
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modeldeploy # max: 10+33+15+12=70
+      Description: Builds the CloudFormation template which defines the endpoint with the specified configuration
+      ServiceRole: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: SAGEMAKER_PROJECT_NAME
+            Value: !Ref SageMakerProjectName
+          - Name: SAGEMAKER_PROJECT_ID
+            Value: !Ref SageMakerProjectId
+          - Name: ARTIFACT_BUCKET
+            Value: !Ref MlOpsArtifactsBucket
+          - Name: MODEL_EXECUTION_ROLE_ARN
+            Value: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+          - Name: SOURCE_MODEL_PACKAGE_GROUP_NAME
+            Value: !Sub ${SageMakerProjectName}-${SageMakerProjectId}
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          # The build writes these files to the output artifact.
+          # The CloudFormation deployment actions below read them.
+          - Name: EXPORT_TEMPLATE_NAME
+            Value: template-export.yml
+          - Name: EXPORT_TEMPLATE_STAGING_CONFIG
+            Value: staging-config-export.json
+          - Name: EXPORT_TEMPLATE_PROD_CONFIG
+            Value: prod-config-export.json
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      TimeoutInMinutes: 30
+
+  ModelDeployTestProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      # Max length: 255 chars
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-testing # max: 10+33+15+8=66
+      Description: Test the staging endpoint
+      ServiceRole: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: SAGEMAKER_PROJECT_NAME
+            Value: !Ref SageMakerProjectName
+          - Name: SAGEMAKER_PROJECT_ID
+            Value: !Ref SageMakerProjectId
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: BUILD_CONFIG
+            Value: staging-config-export.json
+          - Name: EXPORT_TEST_RESULTS
+            Value: test-results.json
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: test/buildspec.yml
+      TimeoutInMinutes: 30
+
+  ModelDeployPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: MlOpsArtifactsBucket
+    Properties:
+      # Max length: 100 chars
+      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-modeldeploy # max: 10+33+15+12=70
+      RoleArn: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+      PipelineType: V2
+      ArtifactStore:
+        Type: S3
+        Location:
+          !Ref MlOpsArtifactsBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: ModelDeployInfraCode
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                # The EventBridge rules above start the pipeline, so polling is off
+                PollForSourceChanges: false
+                RepositoryName: !GetAtt ModelDeployCodeCommitRepository.Name
+                BranchName: main
+              OutputArtifacts:
+                - Name: SourceArtifact
+        - Name: Build
+          Actions:
+            - Name: BuildDeploymentTemplates
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ProjectName: !Ref ModelDeployBuildProject
+              RunOrder: 1
+        - Name: DeployStaging
+          Actions:
+            - Name: DeployResourcesStaging
+              InputArtifacts:
+                - Name: BuildArtifact
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: REPLACE_ON_FAILURE
+                Capabilities: CAPABILITY_NAMED_IAM
+                RoleArn:
+                  !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+                StackName: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-deploy-staging  #10+33+15+14=72 out of 128 max
+                TemplateConfiguration: BuildArtifact::staging-config-export.json
+                # The buildspec.yml in the deployment repository uses this file name
+                TemplatePath: BuildArtifact::template-export.yml
+              RunOrder: 1
+            - Name: TestStaging
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: SourceArtifact
+                - Name: BuildArtifact
+              OutputArtifacts:
+                - Name: TestArtifact
+              Configuration:
+                ProjectName: !Ref ModelDeployTestProject
+                PrimarySource: SourceArtifact
+              RunOrder: 2
+            - Name: ApproveDeployment
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Version: 1
+                Provider: Manual
+              Configuration:
+                CustomData: "Approve this model for Production"
+              RunOrder: 3
+        - Name: DeployProd
+          Actions:
+            - Name: DeployResourcesProd
+              InputArtifacts:
+                - Name: BuildArtifact
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn:
+                  !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
+                Capabilities: CAPABILITY_NAMED_IAM
+                StackName: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-deploy-prod #10+33+15+11=69 out of 128 max
+                TemplateConfiguration: BuildArtifact::prod-config-export.json
+                TemplatePath: BuildArtifact::template-export.yml
+              RunOrder: 1
