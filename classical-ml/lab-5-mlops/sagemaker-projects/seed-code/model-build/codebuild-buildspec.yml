@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      # Must match the Python version of the pipeline step image (SageMaker Distribution 4.x: Python 3.12)
+      python: 3.12
+    commands:
+      # The pipeline definition imports the step functions, so the build needs the same packages as the steps
+      - pip install --quiet --upgrade pip
+      - pip install --quiet -r requirements.txt
+
+  build:
+    commands:
+      # The CodeBuild project in the project template sets all environment variables
+      - >-
+        python pipeline.py
+        --pipeline-name "$SAGEMAKER_PIPELINE_NAME"
+        --role-arn "$SAGEMAKER_PIPELINE_ROLE_ARN"
+        --model-package-group-name "$MODEL_PACKAGE_GROUP_NAME"
+        --mlflow-tracking-uri "$MLFLOW_TRACKING_URI"
+        --mlflow-experiment-name "$MLFLOW_EXPERIMENT_NAME"
+        --image-uri "$PIPELINE_STEP_IMAGE_URI"
+        --project-name "$SAGEMAKER_PROJECT_NAME"
+        --project-id "$SAGEMAKER_PROJECT_ID"
+      - echo "Created or updated the SageMaker pipeline $SAGEMAKER_PIPELINE_NAME and started an execution"

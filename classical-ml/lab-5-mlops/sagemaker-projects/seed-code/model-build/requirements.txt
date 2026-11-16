@@ -1,0 +1,17 @@
+# Packages of the model build: CodeBuild installs them to build the pipeline definition,
+# and every pipeline step installs them at start (Dependencies in config.yaml).
+# Same set as the SageMaker Pipelines lab (sagemaker-pipelines/requirements.txt).
+scikit-learn
+xgboost==3.0.5
+s3fs==0.4.2
+sagemaker>=3,<4
+sagemaker-core>=2,<3
+sagemaker-train>=1,<2
+sagemaker-serve>=1,<2
+sagemaker-mlops>=1,<2
+pandas==2.1.4
+gevent
+geventhttpclient
+mlflow<4
+sagemaker-mlflow>=0.5.0,<1
+packaging<25
