@@ -12,3 +12,6 @@ Find details on each lab here - https://sagemaker-immersionday.workshop.aws/
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
 
+![SageMaker Logo](images/SageMaker_logo.png)
+
+SageMaker 的品牌 logo，用于文档和 README 中展示。
